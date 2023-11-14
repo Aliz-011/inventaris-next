@@ -1,4 +1,3 @@
-import { Product } from '@prisma/client';
 import { create } from 'zustand';
 
 import { v4 as uuid } from 'uuid';

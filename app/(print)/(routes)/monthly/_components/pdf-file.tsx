@@ -1,6 +1,7 @@
 'use client';
 
-import { Order } from '@prisma/client';
+import { formatter } from '@/lib/utils';
+import { Prisma } from '@prisma/client';
 import {
   Page,
   Text,
@@ -8,7 +9,9 @@ import {
   StyleSheet,
   Font,
   PDFViewer,
+  View,
 } from '@react-pdf/renderer';
+import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
 
 Font.register({
@@ -27,11 +30,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'Oswald',
   },
+  author: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  subtitle: {
+    fontSize: 18,
+    margin: 12,
+    fontFamily: 'Oswald',
+  },
   text: {
     margin: 12,
     fontSize: 14,
     textAlign: 'justify',
-    fontFamily: 'Oswald',
+    fontFamily: 'Times-Roman',
   },
   image: {
     marginVertical: 15,
@@ -42,7 +55,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     color: 'grey',
-    fontFamily: 'Oswald',
   },
   pageNumber: {
     position: 'absolute',
@@ -52,13 +64,17 @@ const styles = StyleSheet.create({
     right: 0,
     textAlign: 'center',
     color: 'grey',
-    fontFamily: 'Oswald',
   },
 });
 
-const PDFFile = () => {
+const PDFFile = ({
+  orders,
+}: {
+  orders: Prisma.OrderGetPayload<{
+    include: { orderItems: { include: { product: true } } };
+  }>[];
+}) => {
   const pageColors = ['#f6d186', '#f67280', '#c06c84'];
-
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -69,39 +85,88 @@ const PDFFile = () => {
     return null;
   }
 
-  const pages = [
-    {
-      text: 'Second page content goes here...',
-      image:
-        'https://www.si.com/.image/ar_4:3%2Cc_fill%2Ccs_srgb%2Cfl_progressive%2Cq_auto:good%2Cw_1200/MTcwMzExMzEwNTc0MTAxODM5/lebron-dunk.jpg',
-    },
-    {
-      text: 'Third page content goes here...',
-      image:
-        'https://s.yimg.com/ny/api/res/1.2/Aj5UoHHKnNOpdwE6Zz9GIQ--/YXBwaWQ9aGlnaGxhbmRlcjt3PTY0MA--/https://s.yimg.com/os/creatr-uploaded-images/2023-01/b02a71d0-a774-11ed-bf7f-08714e8ad300',
-    },
-  ];
+  const total = orders.reduce((total, order) => {
+    return (
+      total +
+      order.orderItems.reduce((orderTotal, item) => {
+        return orderTotal + Number(item.product.price) * item.quantity;
+      }, 0)
+    );
+  }, 0);
 
   return (
-    <Document>
-      {pages.map((page, index) => {
-        return (
-          <Page
-            key={index}
-            style={{ ...styles.body, backgroundColor: pageColors[index] }}
+    <PDFViewer
+      style={{
+        width: '100vw',
+        minHeight: '100vh',
+      }}
+    >
+      <Document title="Monthly report">
+        <Page size="A4" style={styles.body}>
+          <View>
+            <Text style={styles.header}>Laporan bulanan</Text>
+            <Text style={styles.title}>
+              Laporan Bulan{' '}
+              {new Date().toLocaleString('id-ID', { month: 'long' })}
+            </Text>
+          </View>
+          <View
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8',
+              flexDirection: 'row',
+              marginTop: '20',
+            }}
           >
-            <Text style={styles.header} fixed></Text>
-            <Text style={styles.text}>{page.text}</Text>
-            <Text
-              style={styles.pageNumber}
-              render={({ pageNumber, totalPages }) =>
-                `${pageNumber} / ${totalPages}`
-              }
-            />
-          </Page>
-        );
-      })}
-    </Document>
+            <Text>No</Text>
+            <Text>Customer</Text>
+            <Text>Date</Text>
+          </View>
+          <View
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+
+              flexDirection: 'column',
+              marginTop: '10',
+            }}
+          >
+            {orders.map((order, i) => (
+              <View
+                key={order.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+
+                  flexDirection: 'row',
+                  marginTop: '10',
+                  width: '100%',
+                }}
+              >
+                <Text>{i + 1}</Text>
+                <Text style={{ textTransform: 'capitalize' }}>
+                  {order.customer}
+                </Text>
+                <Text>{format(order.createdAt, 'd MMMM, yyyy')}</Text>
+              </View>
+            ))}
+          </View>
+          <View
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              marginTop: 20,
+            }}
+          >
+            <Text>Total: {formatter.format(total)}</Text>
+          </View>
+        </Page>
+      </Document>
+    </PDFViewer>
   );
 };
 

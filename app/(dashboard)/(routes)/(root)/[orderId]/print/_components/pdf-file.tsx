@@ -68,36 +68,38 @@ const styles = StyleSheet.create({
 });
 
 const PDFFile = ({
-  orders,
+  data,
 }: {
-  orders: Prisma.OrderGetPayload<{
+  data: Prisma.OrderGetPayload<{
     include: { orderItems: { include: { product: true } } };
-  }>[];
+  }> | null;
 }) => {
   const pageColors = ['#f6d186', '#f67280', '#c06c84'];
   const [isMounted, setIsMounted] = useState(false);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  useEffect(() => {
+    let totalPrice = 0;
+
+    for (const item of data?.orderItems!) {
+      totalPrice += Number(item.product.price) * item.quantity!;
+    }
+
+    setTotal(totalPrice);
+  }, [data]);
+
   if (!isMounted) {
     return null;
   }
 
-  const total = orders.reduce((total, order) => {
-    return (
-      total +
-      order.orderItems.reduce((orderTotal, item) => {
-        return orderTotal + Number(item.product.price) * item.quantity;
-      }, 0)
-    );
-  }, 0);
-
   return (
     <PDFViewer
       style={{
-        width: '100vw',
+        width: '90vw',
         minHeight: '100vh',
       }}
     >
@@ -127,6 +129,7 @@ const PDFFile = ({
           >
             <Text>No</Text>
             <Text>Customer</Text>
+            <Text>Items</Text>
             <Text>Date</Text>
           </View>
           <View
@@ -139,26 +142,30 @@ const PDFFile = ({
               marginTop: '10',
             }}
           >
-            {orders.map((order, i) => (
-              <View
-                key={order.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between',
+            <View
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
 
-                  flexDirection: 'row',
-                  marginTop: '10',
-                  width: '100%',
-                }}
-              >
-                <Text>{i + 1}</Text>
-                <Text style={{ textTransform: 'capitalize' }}>
-                  {order.customer}
-                </Text>
-                <Text>{format(order.createdAt, 'd MMMM, yyyy')}</Text>
+                flexDirection: 'row',
+                marginTop: '10',
+                width: '100%',
+              }}
+            >
+              <Text>1</Text>
+              <Text style={{ textTransform: 'capitalize' }}>
+                {data?.customer}
+              </Text>
+              <View>
+                {data?.orderItems.map((orderItem) => (
+                  <Text key={orderItem.id}>
+                    {orderItem.product.name} - {orderItem.quantity}x
+                  </Text>
+                ))}
               </View>
-            ))}
+              <Text>{format(data?.createdAt!, 'd MMMM, yyyy')}</Text>
+            </View>
           </View>
           <View
             style={{

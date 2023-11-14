@@ -6,6 +6,7 @@ import {
   LineChart,
   Banknote,
   TrendingUp,
+  Printer,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -17,6 +18,8 @@ import { buttonVariants } from '@/components/ui/button';
 import Heading from '@/components/heading';
 import CardOverview from '@/components/card-overview';
 import { DataTable } from '@/components/data-table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Overview } from '@/components/overview';
 
 import {
   getRevenueThisMonth,
@@ -25,8 +28,6 @@ import {
 import { getSalesCount } from '@/actions/get-sales-count';
 import { getTotalRevenue } from '@/actions/get-total-revenue';
 import { getRevenueToday } from '@/actions/get-today';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Overview } from '@/components/overview';
 import { getGraphRevenue } from '@/actions/get-graph-revenue';
 
 const SetupPage = async () => {
@@ -115,12 +116,23 @@ const SetupPage = async () => {
       </Card>
 
       <DataTable searchKey="customer" columns={columns} data={formattedOrder}>
-        <Link
-          href="/monthly"
-          className={buttonVariants({ variant: 'secondary', size: 'sm' })}
-        >
-          Monthly
-        </Link>
+        <div className="flex items-center gap-x-2">
+          <Link
+            href="/monthly"
+            target="_blank"
+            className={buttonVariants({ variant: 'secondary', size: 'sm' })}
+          >
+            Monthly
+          </Link>
+
+          <Link
+            href="/daily"
+            target="_blank"
+            className={buttonVariants({ variant: 'secondary', size: 'sm' })}
+          >
+            Daily
+          </Link>
+        </div>
       </DataTable>
     </>
   );

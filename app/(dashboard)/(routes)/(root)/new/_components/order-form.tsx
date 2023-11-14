@@ -39,6 +39,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { useConfettiStore } from '@/hooks/use-confetti-store';
 
 const formSchema = z.object({
   customer: z.string().min(2, {
@@ -56,13 +57,13 @@ type OrderFormValues = z.infer<typeof formSchema>;
 
 const OrderForm = ({ products }: { products: Product[] }) => {
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<{
     [itemId: string]: { productId: string; quantity: number };
   }>({});
 
   const router = useRouter();
   const cart = useCart();
+  const confetti = useConfettiStore((state) => state.onOpen);
 
   const handleProductChange = (
     itemId: string,
@@ -89,7 +90,7 @@ const OrderForm = ({ products }: { products: Product[] }) => {
       setLoading(true);
       console.log(selectedProducts);
 
-      const { status, data } = await axios.post('/api/orders', {
+      const { status } = await axios.post('/api/orders', {
         ...values,
         productIds: Object.fromEntries(
           Object.entries(selectedProducts).map(
@@ -104,7 +105,7 @@ const OrderForm = ({ products }: { products: Product[] }) => {
 
       router.refresh();
       router.push('/');
-      toast.success('Order created.');
+      confetti();
     } catch (error: any) {
       toast.error(error.message);
     } finally {

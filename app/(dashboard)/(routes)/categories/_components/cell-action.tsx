@@ -18,6 +18,8 @@ import {
 
 import { CategoryColumn } from './columns';
 import { AlertModal } from '@/components/modals/alert-modal';
+import { useAuth } from '@clerk/nextjs';
+import { isAdmin } from '@/lib/admin';
 
 interface CellActionProps {
   data: CategoryColumn;
@@ -25,6 +27,8 @@ interface CellActionProps {
 
 const CellAction = ({ data }: CellActionProps) => {
   const router = useRouter();
+  const { userId } = useAuth();
+
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -66,17 +70,23 @@ const CellAction = ({ data }: CellActionProps) => {
         <DropdownMenuContent align="end" className="w-[160px]">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuItem onClick={() => onCopy(data.id)}>
-            Copy category Id
+            <Copy className="mr-2 h-4 w-4" />
+            Copy Id
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => router.push(`/categories/${data.id}`)}
-          >
-            Update
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setOpen(true)}>
-            Delete
-          </DropdownMenuItem>
+
+          {isAdmin(userId) && (
+            <>
+              <DropdownMenuItem
+                onClick={() => router.push(`/categories/${data.id}`)}
+              >
+                <Edit className="mr-2 h-4 w-4" /> Update
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setOpen(true)}>
+                <Trash className="mr-2 h-4 w-4" /> Delete
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

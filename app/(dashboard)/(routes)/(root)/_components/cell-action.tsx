@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import { useState } from 'react';
-import { Copy, MoreHorizontal, Trash, Edit } from 'lucide-react';
+import { Copy, MoreHorizontal, Trash, Eye } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -18,6 +18,8 @@ import {
 
 import { OrderColumn } from './columns';
 import { AlertModal } from '@/components/modals/alert-modal';
+import { useAuth } from '@clerk/nextjs';
+import { isAdmin } from '@/lib/admin';
 
 interface CellActionProps {
   data: OrderColumn;
@@ -25,6 +27,8 @@ interface CellActionProps {
 
 const CellAction = ({ data }: CellActionProps) => {
   const router = useRouter();
+  const { userId } = useAuth();
+
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -69,12 +73,14 @@ const CellAction = ({ data }: CellActionProps) => {
             <Copy className="mr-2 h-4 w-4" /> Copy Id
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push(`/${data.id}`)}>
-            View
+            <Eye className="mr-2 h-4 w-4" /> View
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setOpen(true)}>
-            Delete
-          </DropdownMenuItem>
+          {isAdmin(userId) && (
+            <DropdownMenuItem onClick={() => setOpen(true)}>
+              <Trash className="mr-2 h-4 w-4" /> Delete
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

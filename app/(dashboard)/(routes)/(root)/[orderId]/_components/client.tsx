@@ -10,6 +10,7 @@ import { Prisma } from '@prisma/client';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { usePictureModal } from '@/hooks/use-picture-modal';
+import { useRouter } from 'next/navigation';
 
 const OrderIdClient = ({
   order,
@@ -21,6 +22,7 @@ const OrderIdClient = ({
   const [isMounted, setIsMounted] = useState(false);
   const [total, setTotal] = useState(0);
   const open = usePictureModal((state) => state.onOpen);
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
@@ -80,7 +82,7 @@ const OrderIdClient = ({
               <h6 className="text-sm text-violet-500 dark:text-violet-400 font-medium mb-2">
                 Tipe pembayaran:
               </h6>
-              <span className="font-semibold capitalize">
+              <span className="font-semibold uppercase">
                 {order?.paymentType}
               </span>
             </div>
@@ -149,7 +151,12 @@ const OrderIdClient = ({
         </div>
 
         {order?.paymentType === 'cash' ? (
-          <Button className="block w-full">Cetak</Button>
+          <Button
+            className="block w-full"
+            onClick={() => router.push(`/${order.id}/print`)}
+          >
+            Cetak
+          </Button>
         ) : (
           <Button className="block w-full" onClick={open}>
             Bayar
